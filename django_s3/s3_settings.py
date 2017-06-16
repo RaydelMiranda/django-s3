@@ -26,7 +26,7 @@ class DjangoS3Settings(object):
                              'S3_AWS_SECRET_ACCESS_KEY',
                              'S3_CATEGORY_MAP',
                              'S3_AWS_BASE_URL']:
-            if getattr(settings, setting_name) is None:
+            if getattr(self, setting_name) is None:
                 raise DjangoS3SettingError(_("You must to set {} configuration variable".format(setting_name)))
 
 
