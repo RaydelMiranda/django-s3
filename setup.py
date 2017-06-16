@@ -33,11 +33,10 @@ except(IOError, ImportError):
     long_description = ''
 
 setup(
-    name='django-s3',
+    name='real-django-s3',
 
     version='0.2',
-
-    description='An application for adding support for uploading and downloading resources from a s3 amazon bucket.',
+    description='A simple API for download and upload resoources to/from a Amazon S3 bucket',
     long_description=long_description,
 
     # The project's main homepage.
