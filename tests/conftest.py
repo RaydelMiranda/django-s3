@@ -18,10 +18,9 @@ This file is part of Django-S3.
 """
 
 import pytest
-
-from django_s3.resource import Resource
+from django.conf import settings
 
 
 @pytest.fixture(scope='class')
-def resource():
-    return Resource('F0001-B0001_320x320.SVG')
+def django_settings():
+    return settings

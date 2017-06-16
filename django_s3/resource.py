@@ -26,6 +26,7 @@ from django_s3.exceptions import ResourceError, ResourceNameError
 from django_s3.s3_settings import django_s3_settings
 
 url_pattern = re.compile(r'^(?P<folder_name>[\w-]+)_[\w-]+\.(?P<extension>\w{3})$')
+cat_pattern = re.compile(r'^(?P<category_code>[A-Z]+)\d+.+$')
 
 
 class Resource(object):
@@ -40,7 +41,7 @@ class Resource(object):
 
     def __compute_url(self):
         match = url_pattern.match(self.__name)
-        if match:
+        if match is not None:
 
             BASE_URL = django_s3_settings.S3_AWS_BASE_URL
             BASE_URL = BASE_URL[:-1] if BASE_URL.endswith('/') else BASE_URL
@@ -72,11 +73,13 @@ class Resource(object):
 
     @category.getter
     def category(self):
-        pass
+        match = cat_pattern.match(self.__name)
+        if match is not None:
+            return django_s3_settings.S3_CATEGORY_MAP[match.groupdict()['category_code']]
 
     @category.setter
     def category(self, value):
-        raise ResourceError(_("This attribute readonly, see S3_CATEGORIES_MAP."))
+        raise ResourceError(_("This attribute is readonly, see S3_CATEGORY_MAP."))
 
     @property
     def url(self):

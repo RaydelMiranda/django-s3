@@ -24,8 +24,9 @@ from django_s3.exceptions import ResourceError
 from django_s3.resource import Resource
 
 
-@pytest.mark.usefixtures('settings', 'resource')
+@pytest.mark.usefixtures('django_settings', 'resource')
 class TestSource:
+
     def test_resource_creation(self, settings, resource):
         assert isinstance(resource, Resource)
 
@@ -47,5 +48,24 @@ class TestSource:
             resource.name = 'some value'
             assert _("This attribute is readonly, is set at creation time.") == str(exceinfo.value)
 
-    def test_get_category(self):
-        pass
+    def test_get_category(self, settings, resource):
+        samples = [
+            ('B0001_DEFAULT.JPG', 'BACKGROUND'),
+            ('F0001_WHITE_DEFAULT.JPG', 'VASE'),
+            ('F2344-B0001_DEFAULT.JPG', 'VASE'),
+            ('CF0001_WHITE_DEFAULT.JPG', 'CLIPPING-FLOWER'),
+            ('WF0001_WHITE_DEFAULT.JPG', 'WRAPPING-FLOWER'),
+            ('CR01-047_B0001_320x320.JPG', 'CATALOGUE-PRODUCT'),
+            ('PP0001', 'PERSONALIZED-PRODUCT'),
+            ('CM991992', 'COMPOSITION')
+        ]
+        for file_name, expected_category in samples:
+            res = Resource(file_name)
+            assert res.category == expected_category, \
+                _("Expected category {} for the resource with name {}, see the settings "
+                  "configuration: S3_CATEGORY_MAP.".format(expected_category, file_name))
+
+    def test_set_catgegory(self, settings, resource):
+        with pytest.raises(ResourceError) as exceinfo:
+            resource.category = 'some value'
+            assert _("This attribute is readonly, see S3_CATEGORY_MAP.") == str(exceinfo.value)
