@@ -36,7 +36,7 @@ setup(
     name='real-django-s3',
 
     version='0.2',
-    description='A simple API for download and upload resoources to/from a Amazon S3 bucket',
+    description='A simple API for download and upload resources to/from a Amazon S3 bucket',
     long_description=long_description,
 
     # The project's main homepage.
@@ -60,7 +60,7 @@ setup(
         'Topic :: Software Development',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: GPL',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.

@@ -24,6 +24,7 @@ import boto
 from boto.s3.key import Key
 from django.utils.translation import ugettext_lazy as _
 
+from django_s3.resource import Resource
 from django_s3.s3_settings import django_s3_settings
 
 
@@ -41,6 +42,7 @@ class Transport(object):
         # connect to the bucket
         self.__conn = boto.connect_s3(aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
         self.__bucket = self.__conn.get_bucket(bucket_name)
+        self.__files = self.__bucket.list()
 
     def upload(self, resource):
         """
@@ -58,22 +60,24 @@ class Transport(object):
             # Right now we don't know what exceptions are expected here, we propagate the error
             # up. If we found some exception then we'll add the proper handler.
             raise
+        else:
+            self.__files = self.__bucket.list()
 
     def download(self, resource):
         """
         Download a resource.
         
         :param resource: An instance of `django_s3.resource.Resource`
+        :return: The absolute filename of the downloaded file. 
         """
 
-        files = self.__bucket.list()
         filename = os.path.join(django_s3_settings.S3_LOCAL_PATH, resource.name)
 
         # If the file exists do not download again.
         if not os.path.exists(filename):
             Transport.logger(_('Downloading {} to {}.'.format(resource.name, filename)))
             try:
-                files.get_contents_to_filename(filename)
+                self.__files.get_contents_to_filename(filename)
             except Exception as err:
                 Transport.logger(_("Error downloading file: {}. Error: {}".format(resource.name, err)))
                 # Right now we don't know what exceptions are expected here, we propagate the error
@@ -81,3 +85,17 @@ class Transport(object):
                 raise
         else:
             Transport.logger(_('File already exists, skipping download: {}'.format(filename)))
+
+        return filename
+
+    def download_by_name(self, name):
+        """
+        
+        :param name: Name for the resource to download. 
+        :return: A 2-tuple object containing a resource and the final path of the resource.
+        """
+
+        resource = Resource(name)
+        filename = self.download(resource)
+
+        return resource, filename
