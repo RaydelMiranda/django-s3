@@ -54,6 +54,7 @@ class Transport(object):
             key_holder.set_contents_from_filename(os.path.join(django_s3_settings.S3_UPLOAD_DIR_PATH, resource.name))
             key_holder.make_public()
         except Exception as err:
+            Transport.logger(_("Error uploading file: {}. Error: {}".format(resource.name, err)))
             # Right now we don't know what exceptions are expected here, we propagate the error
             # up. If we found some exception then we'll add the proper handler.
             raise
@@ -74,6 +75,7 @@ class Transport(object):
             try:
                 files.get_contents_to_filename(filename)
             except Exception as err:
+                Transport.logger(_("Error downloading file: {}. Error: {}".format(resource.name, err)))
                 # Right now we don't know what exceptions are expected here, we propagate the error
                 # up. If we found some exception then we'll add the proper handler.
                 raise
