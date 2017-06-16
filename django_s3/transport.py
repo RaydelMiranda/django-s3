@@ -17,10 +17,12 @@ This file is part of Django-S3.
     along with Django-S3.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 import os
 
 import boto
 from boto.s3.key import Key
+from django.utils.translation import ugettext_lazy as _
 
 from django_s3.s3_settings import django_s3_settings
 
@@ -29,6 +31,8 @@ class Transport(object):
     """
     Upload and download resources.
     """
+
+    logger = logging.getLogger('django-s3-transport')
 
     def __init__(self, aws_key, aws_secret, bucket_name):
         """
@@ -43,7 +47,6 @@ class Transport(object):
         Upload a resource.
         
         :param resource: An instance of `django_s3.resource.Resource`
-        :return: 
         """
         try:
             key_holder = Key(self.__bucket)
@@ -51,13 +54,28 @@ class Transport(object):
             key_holder.set_contents_from_filename(os.path.join(django_s3_settings.S3_UPLOAD_DIR_PATH, resource.name))
             key_holder.make_public()
         except Exception as err:
+            # Right now we don't know what exceptions are expected here, we propagate the error
+            # up. If we found some exception then we'll add the proper handler.
             raise
 
     def download(self, resource):
         """
         Download a resource.
         
-        :param resource: 
-        :return: 
+        :param resource: An instance of `django_s3.resource.Resource`
         """
-        pass
+
+        files = self.__bucket.list()
+        filename = os.path.join(django_s3_settings.S3_LOCAL_PATH, resource.name)
+
+        # If the file exists do not download again.
+        if not os.path.exists(filename):
+            Transport.logger(_('Downloading {} to {}.'.format(resource.name, filename)))
+            try:
+                files.get_contents_to_filename(filename)
+            except Exception as err:
+                # Right now we don't know what exceptions are expected here, we propagate the error
+                # up. If we found some exception then we'll add the proper handler.
+                raise
+        else:
+            Transport.logger(_('File already exists, skipping download: {}'.format(filename)))
