@@ -83,5 +83,5 @@ setup(
 
     include_package_data=True,
 
-    install_requires=['boto==2.38.0', 'pytest'],
+    install_requires=['boto==2.38.0', 'pytest', 'mock'],
 )

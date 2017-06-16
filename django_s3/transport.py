@@ -17,6 +17,9 @@ This file is part of Django-S3.
     along with Django-S3.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import boto
+from boto.s3.key import Key
+
 
 class Transport(object):
     """
@@ -27,7 +30,9 @@ class Transport(object):
         """
         Initializes the connection to the service.       
         """
-        pass
+        # connect to the bucket
+        self.__conn = boto.connect_s3(aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
+        self.__bucket = self.__conn.get_bucket(bucket_name)
 
     def upload(self, resource):
         """
@@ -35,7 +40,9 @@ class Transport(object):
         :param resource: 
         :return: 
         """
-        pass
+        key_holder = Key(self.__bucket)
+        key_holder.key = resource.name
+        key_holder.set_contents_from_file()
 
     def download(self, resource):
         """
