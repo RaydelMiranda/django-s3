@@ -20,7 +20,7 @@ This file is part of Django-S3.
 import pytest
 from django.utils.translation import ugettext_lazy as _
 
-from django_s3.exceptions import ResourceError
+from django_s3.exceptions import ResourceError, ResourceNameError
 from django_s3.resource import Resource
 
 
@@ -28,6 +28,21 @@ from django_s3.resource import Resource
 class TestSource:
     def test_resource_creation(self, settings, resource):
         assert isinstance(resource, Resource)
+
+    def test_creation_wrong_names(self, settings, resource):
+        wrong_names = [
+            '03323_12331-230x234.jgp',  # Starting with a number.
+            ' 03323_12331-230x234.jgp',  # Starting with a space.
+            '_3323_12331-230x234.jgp',  # Starting with a special character.
+            'FFFF033_2312331-230x234.jgp',  # Starting with mora than 2 letters.
+            'FF0332312331-230x234.jgp',  # Starting with mora than 2 letters.
+            'fF0332312331-230x234.jgp',  # Missing '_' with a small letter.
+            'FF03323_123:31-230x234.jgp',  # Containing spacial character in the middle.
+            'FF3323_123\31-230x234.jgp',  # Containing spacial character in the middle (2).
+        ]
+        for sample in wrong_names:
+            with pytest.raises(ResourceNameError):
+                res = Resource(sample)
 
     def test_get_url(self, settings, resource):
         # F0001-B0001_320x320.SVG
@@ -47,6 +62,13 @@ class TestSource:
             resource.name = 'some value'
             assert _("This attribute is readonly, is set at creation time.") == str(exceinfo.value)
 
+    def test_url_wrong_file_name(self, settings, resource):
+        """
+        The object should never be created using a wrong name, since in the initializer,
+        we check for name correctness.
+        """
+        pass
+
     def test_get_category(self, settings, resource):
         samples = [
             ('B0001_DEFAULT.JPG', 'BACKGROUND'),
@@ -55,8 +77,8 @@ class TestSource:
             ('CF0001_WHITE_DEFAULT.JPG', 'CLIPPING-FLOWER'),
             ('WF0001_WHITE_DEFAULT.JPG', 'WRAPPING-FLOWER'),
             ('CR01-047_B0001_320x320.JPG', 'CATALOGUE-PRODUCT'),
-            ('PP0001', 'PERSONALIZED-PRODUCT'),
-            ('CM991992', 'COMPOSITION')
+            ('PP0001_00000_0000.jpg', 'PERSONALIZED-PRODUCT'),
+            ('CM991992_0000_000.png', 'COMPOSITION')
         ]
         for file_name, expected_category in samples:
             res = Resource(file_name)

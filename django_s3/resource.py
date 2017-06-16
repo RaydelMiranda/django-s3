@@ -21,11 +21,10 @@ import re
 
 from django.utils.translation import ugettext_lazy as _
 
-from django_s3.category import Category
 from django_s3.exceptions import ResourceError, ResourceNameError
 from django_s3.s3_settings import django_s3_settings
 
-url_pattern = re.compile(r'^(?P<folder_name>[\w-]+)_[\w-]+\.(?P<extension>\w{3})$')
+url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[\w-]+)_[\w-]+\.(?P<extension>\w{3})$')
 cat_pattern = re.compile(r'^(?P<category_code>[A-Z]+)\d+.+$')
 code_pattern = re.compile(r'^(?P<code>.+)\..+$')
 
@@ -37,9 +36,13 @@ class Resource(object):
 
     def __init__(self, name):
         self.__name = name
-        self.__category = Category()
+        self.__category = None
         self.__url = None
         self.__code = None
+
+        # This is a control for checking the correctness of the file name, according
+        # the convention specified by the API.
+        self.__compute_url()
 
     def __compute_url(self):
         match = url_pattern.match(self.__name)
