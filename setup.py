@@ -35,7 +35,7 @@ except(IOError, ImportError):
 setup(
     name='django-s3',
 
-    version='0.1',
+    version='0.2',
 
     description='An application for adding support for uploading and downloading resources from a s3 amazon bucket.',
     long_description=long_description,
@@ -47,7 +47,7 @@ setup(
     author='Raydel Miranda',
     author_email='raydel.miranda.gomez@gmail.com',
 
-    license='LGPL',
+    license='GPL',
     data_files=[('', ['README.md'])],
     classifiers=[
         # How mature is this project? Common values are
