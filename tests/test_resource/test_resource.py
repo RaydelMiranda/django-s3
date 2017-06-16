@@ -26,7 +26,6 @@ from django_s3.resource import Resource
 
 @pytest.mark.usefixtures('django_settings', 'resource')
 class TestSource:
-
     def test_resource_creation(self, settings, resource):
         assert isinstance(resource, Resource)
 
@@ -69,3 +68,13 @@ class TestSource:
         with pytest.raises(ResourceError) as exceinfo:
             resource.category = 'some value'
             assert _("This attribute is readonly, see S3_CATEGORY_MAP.") == str(exceinfo.value)
+
+    def test_get_code(self, settings, resource):
+        # F0001-B0001_320x320.SVG
+        assert resource.code == 'F0001-B0001_320x320', \
+            "The is not being calculated correctly from the name."
+
+    def test_set_code(self, settings, resource):
+        with pytest.raises(ResourceError) as exceinfo:
+            resource.category = ""
+            assert _("This attribute readonly, It is calculated using the resource name") == str(exceinfo.value)

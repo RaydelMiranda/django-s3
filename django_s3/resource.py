@@ -27,6 +27,7 @@ from django_s3.s3_settings import django_s3_settings
 
 url_pattern = re.compile(r'^(?P<folder_name>[\w-]+)_[\w-]+\.(?P<extension>\w{3})$')
 cat_pattern = re.compile(r'^(?P<category_code>[A-Z]+)\d+.+$')
+code_pattern = re.compile(r'^(?P<code>.+)\..+$')
 
 
 class Resource(object):
@@ -38,6 +39,7 @@ class Resource(object):
         self.__name = name
         self.__category = Category()
         self.__url = None
+        self.__code = None
 
     def __compute_url(self):
         match = url_pattern.match(self.__name)
@@ -97,12 +99,18 @@ class Resource(object):
 
     @property
     def code(self):
-        pass
+        return self.__code
 
     @code.getter
-    def __get_code(self):
-        raise ResourceError(_("This attribute readonly, It is calculated using the resource name"))
+    def code(self):
+        if self.__code is None:
+            match = code_pattern.match(self.__name)
+            if match is not None:
+                self.__code = match.groupdict()['code']
+            else:
+                raise ResourceNameError()
+        return self.__code
 
     @code.setter
-    def __set_code(self, value):
-        pass
+    def code(self, value):
+        raise ResourceError(_("This attribute readonly, It is calculated using the resource name"))
