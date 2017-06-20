@@ -19,6 +19,7 @@ This file is part of Django-S3.
 
 import re
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from django_s3.exceptions import ResourceError, ResourceNameError
@@ -27,6 +28,7 @@ from django_s3.s3_settings import django_s3_settings
 url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[\w-]+)_[\w-]+\.(?P<extension>\w{3})$')
 cat_pattern = re.compile(r'^(?P<category_code>[A-Z]+)\d+.+$')
 code_pattern = re.compile(r'^(?P<code>.+)\..+$')
+size_pattern = re.compile('(?P<size>\d+x\d+)')
 
 
 class Resource(object):
@@ -37,8 +39,11 @@ class Resource(object):
     def __init__(self, name):
         self.__name = name
         self.__category = None
+        self.__category_code = None
         self.__url = None
         self.__code = None
+        self.__extension = None
+        self.__size = None
 
         # This is a control for checking the correctness of the file name, according
         # the convention specified by the API.
@@ -51,9 +56,12 @@ class Resource(object):
             BASE_URL = django_s3_settings.S3_AWS_BASE_URL
             BASE_URL = BASE_URL[:-1] if BASE_URL.endswith('/') else BASE_URL
 
-            return "{}/{}/{}/{}".format(
+            folder = settings.S3_CATEGORY_MAP[self.category_code]
+
+            return "{}/{}/{}/{}/{}".format(
                 BASE_URL,
                 django_s3_settings.S3_BUCKET_NAME,
+                folder,
                 match.groupdict()['folder_name'],
                 self.__name
             )
@@ -87,6 +95,20 @@ class Resource(object):
         raise ResourceError(_("This attribute is readonly, see S3_CATEGORY_MAP."))
 
     @property
+    def category_code(self):
+        return self.__category_code
+
+    @category_code.getter
+    def category_code(self):
+        match = cat_pattern.match(self.__name)
+        if match is not None:
+            return match.groupdict()['category_code']
+
+    @category_code.setter
+    def category_code(self, value):
+        raise ResourceError(_("This attribute is readonly, see S3_CATEGORY_MAP."))
+
+    @property
     def url(self):
         return self.__url
 
@@ -116,4 +138,43 @@ class Resource(object):
 
     @code.setter
     def code(self, value):
+        raise ResourceError(_("This attribute readonly, It is calculated using the resource name"))
+
+    @property
+    def extension(self):
+        return self.__extension
+
+    @extension.getter
+    def extension(self):
+        if self.__extension is None:
+            match = url_pattern.match(self.__name)
+            if match is not None:
+                self.__extension = match.groupdict()['extension']
+            else:
+                raise ResourceNameError()
+        return self.__extension
+
+    @extension.setter
+    def extension(self, value):
+        raise ResourceError(_("This attribute readonly, It is calculated using the resource name"))
+
+    @property
+    def size(self):
+        return self.__size
+
+    @size.getter
+    def size(self):
+        if self.__size is None:
+            match = url_pattern.match(self.__name)
+            if match is not None:
+                self.__size = match.groupdict()['size']
+            else:
+                raise ResourceNameError()
+            # At this moment self.__size is a str object, (Ex. "100x100")
+            # we need something like (100, 100)
+            self.__size = [int(elem) for elem in self.__size.split('x')]
+        return self.__size
+
+    @size.setter
+    def size(self, value):
         raise ResourceError(_("This attribute readonly, It is calculated using the resource name"))

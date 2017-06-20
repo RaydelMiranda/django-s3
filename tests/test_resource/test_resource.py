@@ -17,11 +17,15 @@ This file is part of Django-S3.
     along with Django-S3.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import re
+
 import pytest
 from django.utils.translation import ugettext_lazy as _
 
 from django_s3.exceptions import ResourceError, ResourceNameError
 from django_s3.resource import Resource
+
+url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[\w-]+)_[\w-]+\.(?P<extension>\w{3})$')
 
 
 @pytest.mark.usefixtures('django_settings', 'resource')
@@ -45,9 +49,14 @@ class TestSource:
                 res = Resource(sample)
 
     def test_get_url(self, settings, resource):
-        # F0001-B0001_320x320.SVG
-        assert resource.url == \
-               settings.S3_AWS_BASE_URL + settings.S3_BUCKET_NAME + '/F0001-B0001/' + resource.name
+        # Create a resource for each resource type and test for the correct url.
+        resource_name_template = "{}001-B0001_320x320.SVG"
+        for code, category in settings.S3_CATEGORY_MAP.items():
+            res = Resource(resource_name_template.format(code))
+            folder_name = url_pattern.match(res.name).groupdict()['folder_name']
+            assert res.url == \
+                   settings.S3_AWS_BASE_URL + settings.S3_BUCKET_NAME + '/' + category + \
+                   '/{}/'.format(folder_name) + res.name
 
     def test_set_url(self, settings, resource):
         with pytest.raises(ResourceError) as exceinfo:
@@ -86,9 +95,26 @@ class TestSource:
                 _("Expected category {} for the resource with name {}, see the settings "
                   "configuration: S3_CATEGORY_MAP.".format(expected_category, file_name))
 
-    def test_set_catgegory(self, settings, resource):
+    def test_get_category_code(self, settings, resource):
+        samples = [
+            ('B0001_DEFAULT.JPG', 'B'),
+            ('F0001_WHITE_DEFAULT.JPG', 'F'),
+            ('F2344-B0001_DEFAULT.JPG', 'F'),
+            ('CF0001_WHITE_DEFAULT.JPG', 'CF'),
+            ('WF0001_WHITE_DEFAULT.JPG', 'WF'),
+            ('CR01-047_B0001_320x320.JPG', 'CR'),
+            ('PP0001_00000_0000.jpg', 'PP'),
+            ('CM991992_0000_000.png', 'CM')
+        ]
+        for file_name, expected_code in samples:
+            res = Resource(file_name)
+            assert res.category_code == expected_code, \
+                _("Expected category {} for the resource with name {}, see the settings "
+                  "configuration: S3_CATEGORY_MAP.".format(expected_code, file_name))
+
+    def test_set_catgegory_code(self, settings, resource):
         with pytest.raises(ResourceError) as exceinfo:
-            resource.category = 'some value'
+            resource.category_code = 'some value'
             assert _("This attribute is readonly, see S3_CATEGORY_MAP.") == str(exceinfo.value)
 
     def test_get_code(self, settings, resource):
