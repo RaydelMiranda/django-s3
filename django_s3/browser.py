@@ -56,13 +56,16 @@ class Browser(object):
         paths.sort(key=lambda x: len(x.split('/')))
 
         for path in paths:
-            self.__arrange_path_within_structure(path.split('/'), self.__structure, not path.endswith('/'))
+            self.__arrange_path_within_structure(path.split('/'), self.__structure)
 
-    def __arrange_path_within_structure(self, path, structure, is_file=False):
+    def __arrange_path_within_structure(self, path, structure):
         if path == [] or path[0] == '':
             return
         if path[0] not in structure.keys():
-            structure[path[0]] = FileTreeNode(type_=FileTreeNode.FILE if is_file else FileTreeNode.DIR)
+            structure[path[0]] = FileTreeNode(type_=FileTreeNode.DIR)
+        # Rectify type if is a file.
+        if path[-1] != '' and path[-1] == path[0]:
+            structure[path[0]].type = FileTreeNode.FILE
         self.__arrange_path_within_structure(path[1:], structure[path[0]])
 
     def walk(self, relative_to="/"):

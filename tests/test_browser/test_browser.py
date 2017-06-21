@@ -27,7 +27,10 @@ class TestBrowser:
     def test_build_jason(self, paths):
         expected_structure = {
             'EXAMPLE': {
-                'example.txt': {}
+                'example.txt': {},
+                'Example_1': {
+                    'example_1.txt': {}
+                }
             },
             'GRAPHIC-RESOURCES': {
                 'BACKGROUNDS': {},
@@ -59,14 +62,16 @@ class TestBrowser:
 
     def test_browser_get_structure_relative(self, paths):
         browser = Browser(paths)
-        assert browser.walk('EXAMPLE') == {'example.txt': {}}, \
+        assert browser.walk('EXAMPLE') == {'example.txt': {}, 'Example_1': {'example_1.txt': {}}}, \
             "walk function with parameter returns the structure relative to the folder"
 
     def test_file_dir_type(self, paths):
         browser = Browser(paths)
 
         node = browser.walk('EXAMPLE')
-        assert node.type == FileTreeNode.FILE
+        assert node.type == FileTreeNode.DIR
+        assert node['example.txt'].type == FileTreeNode.FILE
+        assert node['Example_1'].type == FileTreeNode.DIR
 
         node = browser.walk('RAW-PICTURES/PRODUCTS/CR01')
         assert node.type == FileTreeNode.DIR
