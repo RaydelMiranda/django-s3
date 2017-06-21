@@ -75,3 +75,10 @@ class TestBrowser:
 
         node = browser.walk('RAW-PICTURES/PRODUCTS/CR01')
         assert node.type == FileTreeNode.DIR
+
+    def test_file_dir_type(self, paths):
+        browser = Browser(paths)
+
+        node = browser.walk('EXAMPLE')
+        assert node.name == 'EXAMPLE'
+        assert node['example.txt'].name == 'example.txt'

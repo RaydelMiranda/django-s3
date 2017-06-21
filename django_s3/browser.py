@@ -25,9 +25,10 @@ class FileTreeNode(dict):
     DIR = 1
     FILE = 0
 
-    def __init__(self, type_=DIR, *args, **kwargs):
+    def __init__(self, type_=DIR, name='', *args, **kwargs):
         super(FileTreeNode, self).__init__(*args, **kwargs)
         self.type = type_
+        self.name = name
 
 
 def get_file_list():
@@ -62,7 +63,7 @@ class Browser(object):
         if path == [] or path[0] == '':
             return
         if path[0] not in structure.keys():
-            structure[path[0]] = FileTreeNode(type_=FileTreeNode.DIR)
+            structure[path[0]] = FileTreeNode(type_=FileTreeNode.DIR, name=path[0])
         # Rectify type if is a file.
         if path[-1] != '' and path[-1] == path[0]:
             structure[path[0]].type = FileTreeNode.FILE

@@ -1,91 +1,144 @@
-Django app for integrating WepPay payment flow into an oscar e-commerce framework based site.
-=============================================================================================
-
-Right now only the *NORMAL* payment method is available.
-
-This django app provides the necessary views and functionality for integrate a WSDL WebPay payment service into adjango-oscar based site.
-
-> **This package has been only tested against the chilean WebPay service.**
-
-
-> **Important notes about payment flow**
->
-> *Operation InitTransaction:* Initializes a transaction in Webpay. In response to the invocation, a 
-> Token is generated, which uniquely represents a transaction. It is important to consider that once this method 
-> is invoked, the delivered Token has a reduced life span of **5 minutes**, after which the Token 
-> is expired and can not be used in a payment.
->
-> *Operation getTransactionResult:* Corresponds to the operation after the init Transaction. Allows you to obtain
-> the result of the transaction once Webpay has resolved your financial authorization
-> 
-> *Operation acknowledgeTransaction:* If the invocation is not performed within 30 seconds
-> (regardless of the result delivered by the getTransactionResult method), Webpay will reverse the transaction, assuming
-> that the trade was unable to report its result, thus preventing cardholder payment.
->
-> [Reference](http://www.transbankdevelopers.cl/?m=api "Tbk. Developers")
-
+Django application for handling graphics resources served  in a S3 Amazon webservice
+====================================================================================
 
 Settings
 --------
 
-In order to use this you must provide some configurations, you can setup the methods you want to use, the methods are:
-**NORMAL**, **NORMAL_MALL**, **CAPTURE** or **ONECLICK**.
-
+Settings example: 
 
 ```python
 # Configuration example
 
-WEBPAY_RETURN_IP_ADDRESS = '127.0.0.1'              # Ip address of the host hosting the e-commerce site.
-WEBPAY_RETURN_PORT = 8000                           # Port where the server is listening for?
-
-WEBPAY_NORMAL = {
-
-
-    'ACTIVE_ENVIRON': 'INTEGRATION',                # INTEGRATION, PRODUCTION or CERTIFICATION
-                                                    # This values determines which url is used
-                                                    # from the 'ENVIRONMENTS' setting.
-
-    'ENVIRONMENTS': {                               # Map the service urls to the active environment value.
-        'INTEGRATION': 'https://webpay3gint.transbank.cl/WSWebpayTransaction/cxf/WSWebpayService?wsdl',
-        'CERTIFICATION': 'https://webpay3gint.transbank.cl/WSWebpayTransaction/cxf/WSWebpayService?wsdl',
-        'PRODUCTION': 'https://webpay3g.transbank.cl/WSWebpayTransaction/cxf/WSWebpayService?wsdl',
-    },
-
-    # The following settings are self explanatory.
-    'PRIVATE_KEY':  '~/webpay_dev_certs/integracion_normal/597020000541.key',
-    'PUBLIC_CERT':  '~/webpay_dev_certs/integracion_normal/597020000541.crt',
-    'WEBPAY_CERT':  '~/webpay_dev_certs/integracion_normal/tbk.pem',
-    'COMMERCE_CODE': '597020000541'
+S3_BUCKET_NAME = 'bucket-name'                      # The name of the bucket we are working with
+S3_AWS_ACCESS_KEY_ID = 'AWS_ACCESS_KEY_ID'          # AWS access key
+S3_AWS_SECRET_ACCESS_KEY = 'AWS_SECRET_ACCESS_KEY'  # AWS secret access key
+S3_LOCAL_PATH = tempfile.gettempdir()               # Path where to put downloaded files.
+S3_UPLOAD_DIR_PATH = tempfile.gettempdir()          # Path where to search files for uploading.
+S3_AWS_BASE_URL = 'http://s3.amazonaws.com/'        # Base url for Amazon S3 services.
+S3_CATEGORY_MAP = {                                 # Map code - category, this is for organizing the 
+    'B':  'BACKGROUND',                              # the folders in the bucket.
+    'F':  'VASE',
+    'CF': 'CLIPPING-FLOWER',
+    'WF': 'WRAPPING-FLOWER',
+    'CR': 'CATALOGUE-PRODUCT',
+    'PP': 'PERSONALIZED-PRODUCT',
+    'CM': 'COMPOSITION'
 }
+
+INSTALLED_APPS = [
+    'django_s3',                                    # Add the app to installed apps.
+]
 ```
 
-Redirecting to **WebpayPaymentDetailsView**
-------------------------------------------
 
-Add the following:
+Transport
+=========
 
-```python
- if payment_method.lower() == 'webpay':
-        return redirect('webpay-redirect')
-```
-
-to the `PaymentDetailsView.get` method.
+Transport is the class for download and upload resources.
 
 
-Including urls
---------------
-
-Add to your urls configuration:
-
-```python
-url(r'^checkout/', include('oscar_webpay.urls')),
-url(r'^dashboard/webpay/', include(webpay_dashboard.urls))
-```
-
-Modifying dependencies
+Downloading a resource
 ----------------------
 
-If you are experiencing some problems getting this to work properly, try to modify some dependencies according to this:
+```python
+ from django_s3.transport import Transport
+ from django_s3.resource import Resource
 
-[TransbankDevelopers](http://www.transbankdevelopers.cl/?m=api "Tbk. Developers")
+ rource = Resource('some_name.jpg')
+ transport = Transport()
+ filename = transport.download(resource)
+ 
+```
 
+Uploading a resource
+--------------------
+
+```python
+ from django_s3.transport import Transport
+ from django_s3.resource import Resource
+
+ rource = Resource('some_name.jpg')
+ transport = Transport()
+ filename = transport.upload(resource)
+```
+
+Downloading a resource by name
+------------------------------
+
+```python
+ from django_s3.transport import Transport
+ from django_s3.resource import Resource
+
+ filename = transport.download('some_name.jpg')
+```
+
+
+Resource
+========
+
+Class for holding information about resources. A resource's name has to 
+follow the following name convention:
+
+`<code><serial>_<rest_of_the_resource_name><size>.<extension>`
+
+* <code>: Upper case letters that identify the resource type (Ex. 'BG' for Backgrounds)
+* <serial>: A serial number unique for every resource.
+* <rest_of_the_resource_name>: String for a name.
+* <size>: The size of the image (Ex. 800x600)
+* <extension>: The image's extension.
+
+```python
+# Example that shows how to get info about a resource.
+
+from django_s3.resource import Resource
+
+ rource = Resource('some_name.jpg')
+ code = resource.code               # The code of the type.
+ size = resource.size               # The size, as a 2-tuple value.    
+ extension = resource.extension     # The extension
+ category = resource.category       # The category mapped to the code.
+ url = resource.url                 # The url where to find the resource
+
+
+```
+
+> All this attributes are read-only, and computed at creation time.
+
+Browser
+=======
+
+A class for walking through the bucket filesystem.
+
+```python
+
+from django_s3.browser import Browser
+from django_s3.browser import FileTreeNode
+
+
+browser = Browser()
+root_node = browser.walk()                  # Returns the whole directory tree. 
+node = browser.walk('path/to/some/node')    # Returns the directory tree relative to the path
+                                            # passed by parameter
+                                            
+# You can check for the node type as well
+if node.type == FileTreeNode.DIR:
+    pass
+
+if node.type == FileTreeNode.File:
+    pass
+```
+
+Accessing resource info using Resource class. 
+---------------------------------------------
+
+Just create a new resource instance and query it for its metadata.
+
+```python
+
+from django_s3.browser import Browser
+
+browser = Browser()
+node = browser.walk('path/to/some/node')    # Returns the directory tree relative to the path
+                                            # passed by parameter
+resource = Resource(node.name)              # Now you can see metadata for resources.                                         
+```
