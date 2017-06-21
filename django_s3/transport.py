@@ -22,6 +22,7 @@ import os
 
 import boto
 from boto.s3.key import Key
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from django_s3.resource import Resource
@@ -35,13 +36,16 @@ class Transport(object):
 
     logger = logging.getLogger('django-s3-transport')
 
-    def __init__(self, aws_key, aws_secret, bucket_name):
+    def __init__(self):
         """
         Initializes the connection to the service.       
         """
         # connect to the bucket
-        self.__conn = boto.connect_s3(aws_access_key_id=aws_key, aws_secret_access_key=aws_secret)
-        self.__bucket = self.__conn.get_bucket(bucket_name)
+        self.__conn = boto.connect_s3(
+            aws_access_key_id=settings.S3_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.S3_AWS_SECRET_ACCESS_KEY
+        )
+        self.__bucket = self.__conn.get_bucket(settings.S3_BUCKET_NAME)
         self.__files = self.__bucket.list()
 
     def upload(self, resource):

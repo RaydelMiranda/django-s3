@@ -35,7 +35,7 @@ except(IOError, ImportError):
 setup(
     name='real-django-s3',
 
-    version='0.2',
+    version='0.3',
     description='A simple API for download and upload resources to/from a Amazon S3 bucket',
     long_description=long_description,
 
