@@ -56,7 +56,7 @@ class Transport(object):
         """
         try:
             key_holder = Key(self.__bucket)
-            key_holder.key = "{}/{}".format(settings.S3_CATGORY_MAP[resource.code], resource.name)
+            key_holder.key = "{}/{}".format(settings.S3_CATEGORY_MAP[resource.code], resource.name)
             key_holder.set_contents_from_filename(os.path.join(django_s3_settings.S3_UPLOAD_DIR_PATH, resource.name))
             key_holder.make_public()
         except Exception as err:
