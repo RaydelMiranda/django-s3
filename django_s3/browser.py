@@ -37,7 +37,7 @@ def get_file_list():
         aws_secret_access_key=settings.S3_AWS_SECRET_ACCESS_KEY
     )
     bucket = conn.get_bucket(settings.S3_BUCKET_NAME)
-    return list(bucket.list())
+    return [path.name for path in list(bucket.list())]
 
 
 class Browser(object):
