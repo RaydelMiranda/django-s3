@@ -35,7 +35,7 @@ except(IOError, ImportError):
 setup(
     name='real-django-s3',
 
-    version='1.1',
+    version='1.2',
     description='A simple API for download and upload graphics resources to/from a Amazon S3 bucket',
     long_description=long_description,
 
