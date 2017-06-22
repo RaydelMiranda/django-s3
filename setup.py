@@ -36,7 +36,7 @@ setup(
     name='real-django-s3',
 
     version='1.1',
-    description='A simple API for download and upload resources to/from a Amazon S3 bucket',
+    description='A simple API for download and upload graphics resources to/from a Amazon S3 bucket',
     long_description=long_description,
 
     # The project's main homepage.
