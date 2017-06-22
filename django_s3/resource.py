@@ -25,7 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_s3.exceptions import ResourceError, ResourceNameError
 from django_s3.s3_settings import django_s3_settings
 
-url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[\w-]+)_[\w-]+\.(?P<extension>\w{3})$')
+url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[\w-]+)_[\w-]+\.(?P<extension>\w{3,4})$')
 cat_pattern = re.compile(r'^(?P<category_code>[A-Z]+)\d+.+$')
 code_pattern = re.compile(r'^(?P<code>.+)\..+$')
 size_pattern = re.compile('(?P<size>\d+x\d+)')
