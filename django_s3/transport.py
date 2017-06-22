@@ -48,6 +48,11 @@ class Transport(object):
         self.__bucket = self.__conn.get_bucket(settings.S3_BUCKET_NAME)
         self.__files = self.__bucket.list()
 
+        # Map the key of each file to the name.
+        self.__key_map = {}
+        for key in self.__files:
+            self.__key_map.update({key.key: key})
+
     def upload(self, resource):
         """
         Upload a resource.
@@ -81,7 +86,9 @@ class Transport(object):
         if not os.path.exists(filename):
             Transport.logger.info(_('Downloading {} to {}.'.format(resource.name, filename)))
             try:
-                self.__files.get_contents_to_filename(filename)
+                key_holder = Key(self.__bucket)
+                key_holder.key = "{}/{}".format(settings.S3_CATEGORY_MAP[resource.code], resource.name)
+                key_holder.get_contents_to_filename(filename)
             except Exception as err:
                 Transport.logger.error(_("Error downloading file: {}. Error: {}".format(resource.name, err)))
                 # Right now we don't know what exceptions are expected here, we propagate the error
