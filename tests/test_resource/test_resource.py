@@ -56,12 +56,16 @@ class TestSource:
             folder_name = url_pattern.match(res.name).groupdict()['folder_name']
             assert res.url == \
                    settings.S3_AWS_BASE_URL + settings.S3_BUCKET_NAME + '/' + category + \
-                   '/{}/'.format(folder_name) + res.name
+                   '/{}/'.format(res.folder_name) + res.name
 
-    def test_set_url(self, settings, resource):
-        with pytest.raises(ResourceError) as exceinfo:
-            resource.url = 'some value'
-            assert _("Malformed reource name") == str(exceinfo.value)
+    def test_get_public_url(self, settings, resource):
+        # Create a resource for each resource type and test for the correct url.
+        resource_name_template = "{}001-B0001_320x320.SVG"
+        for code, category in settings.S3_CATEGORY_MAP.items():
+            res = Resource(resource_name_template.format(code))
+            assert res.public_url == \
+                   settings.S3_AWS_BASE_PUBLIC_URL + settings.S3_BUCKET_NAME + '/' + category + \
+                   '/{}/'.format(res.folder_name) + res.name
 
     def test_get_name(self, settings, resource):
         assert 'F0001-B0001_320x320.SVG' == resource.name
@@ -70,6 +74,17 @@ class TestSource:
         with pytest.raises(ResourceError) as exceinfo:
             resource.name = 'some value'
             assert _("This attribute is readonly, is set at creation time.") == str(exceinfo.value)
+
+    def test_folder_name(self, settings, resource):
+        names_results = {
+            "F001-1_WHITE_70x70.JPG": "F001-1"
+        }
+
+        for name, result in names_results.items():
+
+            resource = Resource(name)
+            match = url_pattern.match(name)
+            assert resource.folder_name == result, 'The name must be extracted correctly.'
 
     def test_url_wrong_file_name(self, settings, resource):
         """
@@ -83,7 +98,6 @@ class TestSource:
         resource = Resource(resource_name_without_size)
         with pytest.raises(ResourceSizeError) as exceinfo:
             size = resource.size()
-
 
     def test_get_category(self, settings, resource):
         samples = [

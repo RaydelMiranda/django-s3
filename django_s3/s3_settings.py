@@ -22,13 +22,16 @@ class DjangoS3Settings(object):
         self.S3_AWS_SECRET_ACCESS_KEY = getattr(settings, 'S3_AWS_SECRET_ACCESS_KEY', None)
         self.S3_AWS_BASE_URL = getattr(settings, 'S3_AWS_BASE_URL', None)
         self.S3_CATEGORY_MAP = getattr(settings, 'S3_CATEGORY_MAP', None)
+        self.S3_AWS_BASE_PUBLIC_URL = getattr(settings, 'S3_AWS_BASE_PUBLIC_URL', None)
 
         for setting_name in ['S3_BUCKET_NAME',
                              'S3_AWS_ACCESS_KEY_ID',
                              'S3_AWS_SECRET_ACCESS_KEY',
                              'S3_CATEGORY_MAP',
                              'S3_AWS_BASE_URL',
-                             'S3_UPLOAD_DIR_PATH']:
+                             'S3_UPLOAD_DIR_PATH',
+                             'S3_AWS_BASE_PUBLIC_URL'
+                             ]:
             if getattr(self, setting_name) is None:
                 raise DjangoS3SettingError(_("You must to set {} configuration variable".format(setting_name)))
 

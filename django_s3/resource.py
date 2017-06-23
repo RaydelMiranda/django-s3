@@ -25,7 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_s3.exceptions import ResourceError, ResourceNameError, ResourceSizeError
 from django_s3.s3_settings import django_s3_settings
 
-url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[\w-]+)_[\w-]+\.(?P<extension>\w{3,4})$')
+url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[-A-a0-9]+)_[\w-]+\.(?P<extension>\w{3,4})$')
 cat_pattern = re.compile(r'^(?P<category_code>[A-Z]+)\d+.+$')
 code_pattern = re.compile(r'^(?P<code>.+)\..+$')
 size_pattern = re.compile('(?P<size>\d+x\d+)')
@@ -36,11 +36,16 @@ class Resource(object):
     Represents a resource in a bucket
     """
 
+    PUBLIC = 1
+    PRIVATE = 2
+
     def __init__(self, name):
         self.__name = name
+        self.__folder_name = None
         self.__category = None
         self.__category_code = None
         self.__url = None
+        self.___public_url = None
         self.__code = None
         self.__extension = None
         self.__size = None
@@ -49,11 +54,12 @@ class Resource(object):
         # the convention specified by the API.
         self.__compute_url()
 
-    def __compute_url(self):
+    def __compute_url(self, access_level=PRIVATE):
         match = url_pattern.match(self.__name)
         if match is not None:
 
-            BASE_URL = django_s3_settings.S3_AWS_BASE_URL
+            BASE_URL = django_s3_settings.S3_AWS_BASE_URL \
+                if access_level == Resource.PRIVATE else django_s3_settings.S3_AWS_BASE_PUBLIC_URL
             BASE_URL = BASE_URL[:-1] if BASE_URL.endswith('/') else BASE_URL
 
             folder = settings.S3_CATEGORY_MAP[self.category_code]
@@ -62,8 +68,8 @@ class Resource(object):
                 BASE_URL,
                 django_s3_settings.S3_BUCKET_NAME,
                 folder,
-                match.groupdict()['folder_name'],
-                self.__name
+                self.folder_name,
+                self.name
             )
         else:
             raise ResourceNameError()
@@ -81,12 +87,24 @@ class Resource(object):
         raise ResourceError(_("This attribute is readonly, is set at creation time."))
 
     @property
+    def folder_name(self):
+        return self.__folder_name
+
+    @folder_name.getter
+    def folder_name(self):
+        return self.__name.split('_')[0]
+
+    @folder_name.setter
+    def folder_name(self, value):
+        raise ResourceError(_("This attribute is readonly, is set at creation time."))
+
+    @property
     def category(self):
         return self.__category
 
     @category.getter
     def category(self):
-        match = cat_pattern.match(self.__name)
+        match = cat_pattern.match(self.folder_name)
         if match is not None:
             return django_s3_settings.S3_CATEGORY_MAP[match.groupdict()['category_code']]
 
@@ -120,6 +138,20 @@ class Resource(object):
 
     @url.setter
     def url(self, value):
+        raise ResourceError(_("This attribute readonly, It is calculated using the resource name"))
+
+    @property
+    def public_url(self):
+        return self.___public_url
+
+    @public_url.getter
+    def public_url(self):
+        if self.___public_url is None:
+            self.___public_url = self.__compute_url(Resource.PUBLIC)
+        return self.___public_url
+
+    @public_url.setter
+    def public_url(self, value):
         raise ResourceError(_("This attribute readonly, It is calculated using the resource name"))
 
     @property
