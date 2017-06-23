@@ -86,7 +86,6 @@ class Transport(object):
         """
 
         filename = os.path.join(django_s3_settings.S3_LOCAL_PATH, resource.name)
-        folder_name = url_pattern.match(resource.name).groupdict()['folder_name']
 
         # If the file exists do not download again.
         if not os.path.exists(filename):
@@ -94,7 +93,7 @@ class Transport(object):
             try:
                 key_holder = Key(self.__bucket)
                 key_holder.key = "{}/{}/{}".format(settings.S3_CATEGORY_MAP[resource.category_code],
-                                                   folder_name,
+                                                   resource.folder_name,
                                                    resource.name)
                 key_holder.get_contents_to_filename(filename)
             except Exception as err:
