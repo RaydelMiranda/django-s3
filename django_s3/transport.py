@@ -87,7 +87,7 @@ class Transport(object):
             Transport.logger.info(_('Downloading {} to {}.'.format(resource.name, filename)))
             try:
                 key_holder = Key(self.__bucket)
-                key_holder.key = "{}/{}".format(settings.S3_CATEGORY_MAP[resource.code], resource.name)
+                key_holder.key = "{}/{}".format(settings.S3_CATEGORY_MAP[resource.category_code], resource.name)
                 key_holder.get_contents_to_filename(filename)
             except Exception as err:
                 Transport.logger.error(_("Error downloading file: {}. Error: {}".format(resource.name, err)))
