@@ -22,7 +22,7 @@ import re
 import pytest
 from django.utils.translation import ugettext_lazy as _
 
-from django_s3.exceptions import ResourceError, ResourceNameError
+from django_s3.exceptions import ResourceError, ResourceNameError, ResourceSizeError
 from django_s3.resource import Resource
 
 url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[\w-]+)_[\w-]+\.(?P<extension>\w{3})$')
@@ -77,6 +77,13 @@ class TestSource:
         we check for name correctness.
         """
         pass
+
+    def test_get_size(self, settings, resource):
+        resource_name_without_size = 'B0001_DEFAULT.JPG'
+        resource = Resource(resource_name_without_size)
+        with pytest.raises(ResourceSizeError) as exceinfo:
+            size = resource.size()
+
 
     def test_get_category(self, settings, resource):
         samples = [

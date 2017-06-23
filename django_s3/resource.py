@@ -22,7 +22,7 @@ import re
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from django_s3.exceptions import ResourceError, ResourceNameError
+from django_s3.exceptions import ResourceError, ResourceNameError, ResourceSizeError
 from django_s3.s3_settings import django_s3_settings
 
 url_pattern = re.compile(r'^(?P<folder_name>[A-Z]{1,2}\d+[\w-]+)_[\w-]+\.(?P<extension>\w{3,4})$')
@@ -167,7 +167,10 @@ class Resource(object):
         if self.__size is None:
             match = url_pattern.match(self.__name)
             if match is not None:
-                self.__size = match.groupdict()['size']
+                try:
+                    self.__size = match.groupdict()['size']
+                except KeyError:
+                    raise ResourceSizeError()
             else:
                 raise ResourceNameError()
             # At this moment self.__size is a str object, (Ex. "100x100")

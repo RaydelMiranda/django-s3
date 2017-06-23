@@ -28,3 +28,8 @@ class ResourceError(Exception):
 class ResourceNameError(ResourceError):
     def __init__(self, message=_("Malformed reource name")):
         super(ResourceError, self).__init__(message)
+
+
+class ResourceSizeError(ResourceError):
+    def __init__(self, message=_("The resource has no specified size.")):
+        super(ResourceError, self).__init__(message)

@@ -25,7 +25,7 @@ from boto.s3.key import Key
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from django_s3.resource import Resource
+from django_s3.resource import Resource, url_pattern
 from django_s3.s3_settings import django_s3_settings
 
 
@@ -60,8 +60,13 @@ class Transport(object):
         :param resource: An instance of `django_s3.resource.Resource`
         """
         try:
+
+            folder_name = url_pattern.match(resource.name).groupdict()['folder_name']
+
             key_holder = Key(self.__bucket)
-            key_holder.key = "{}/{}".format(settings.S3_CATEGORY_MAP[resource.category_code], resource.name)
+            key_holder.key = "{}/{}/{}".format(settings.S3_CATEGORY_MAP[resource.category_code],
+                                               folder_name,
+                                               resource.name)
             key_holder.set_contents_from_filename(os.path.join(django_s3_settings.S3_UPLOAD_DIR_PATH, resource.name))
             key_holder.make_public()
         except Exception as err:
@@ -81,13 +86,16 @@ class Transport(object):
         """
 
         filename = os.path.join(django_s3_settings.S3_LOCAL_PATH, resource.name)
+        folder_name = url_pattern.match(resource.name).groupdict()['folder_name']
 
         # If the file exists do not download again.
         if not os.path.exists(filename):
             Transport.logger.info(_('Downloading {} to {}.'.format(resource.name, filename)))
             try:
                 key_holder = Key(self.__bucket)
-                key_holder.key = "{}/{}".format(settings.S3_CATEGORY_MAP[resource.category_code], resource.name)
+                key_holder.key = "{}/{}/{}".format(settings.S3_CATEGORY_MAP[resource.category_code],
+                                                   folder_name,
+                                                   resource.name)
                 key_holder.get_contents_to_filename(filename)
             except Exception as err:
                 Transport.logger.error(_("Error downloading file: {}. Error: {}".format(resource.name, err)))
