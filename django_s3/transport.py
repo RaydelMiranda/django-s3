@@ -46,12 +46,6 @@ class Transport(object):
             aws_secret_access_key=settings.S3_AWS_SECRET_ACCESS_KEY
         )
         self.__bucket = self.__conn.get_bucket(settings.S3_BUCKET_NAME)
-        self.__files = self.__bucket.list()
-
-        # Map the key of each file to the name.
-        self.__key_map = {}
-        for key in self.__files:
-            self.__key_map.update({key.key: key})
 
     def upload(self, resource):
         """
@@ -74,8 +68,6 @@ class Transport(object):
             # Right now we don't know what exceptions are expected here, we propagate the error
             # up. If we found some exception then we'll add the proper handler.
             raise
-        else:
-            self.__files = self.__bucket.list()
 
     def download(self, resource):
         """
