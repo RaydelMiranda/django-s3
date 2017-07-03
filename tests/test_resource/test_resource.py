@@ -43,6 +43,7 @@ class TestSource:
             'fF0332312331-230x234.jgp',  # Missing '_' with a small letter.
             'FF03323_123:31-230x234.jgp',  # Containing spacial character in the middle.
             'FF3323_123\31-230x234.jgp',  # Containing spacial character in the middle (2).
+            'CF0001_TRANSP_676x566',      # Names must have extension
         ]
         for sample in wrong_names:
             with pytest.raises(ResourceNameError):
