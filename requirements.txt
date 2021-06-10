@@ -1,5 +1,5 @@
 boto==2.38.0
-Django==1.11.4
+Django==2.2.24
 funcsigs==1.0.2
 mock==2.0.0
 pbr==3.1.1
